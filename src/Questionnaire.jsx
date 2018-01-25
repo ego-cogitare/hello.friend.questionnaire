@@ -1,8 +1,10 @@
 import React from 'react';
 import classNames from 'classnames';
 import { Checkbox } from 'react-icheck';
-
 import './staticFiles/css/styles.css';
+import data from './mock';
+import a from './data';
+console.log(a)
 
 export default class Questionnaire extends React.Component {
 
@@ -10,129 +12,12 @@ export default class Questionnaire extends React.Component {
     super(props);
 
     // Empty podcast
-    this.emptyPodcast = { name: '', enabled: true, isNew: true };
+    this.emptyPodcast = { name: '', enabled: true, order: 999, isNew: true };
 
     // Empty category
-    this.emptyCategory = { name: '', enabled: true, isNew: true };
+    this.emptyCategory = { name: '', podcast_id: null, enabled: true, order: 999, isNew: true };
 
-    this.state = {
-      podcasts: [
-          {
-              id: 1,
-              name: 'Podcast #1',
-              enabled: true
-          },
-          {
-              id: 2,
-              name: 'Podcast #2',
-              enabled: true
-          },
-          {
-              id: 3,
-              name: 'Podcast #3',
-              enabled: true
-          },
-      ],
-
-      categories: [
-          {
-              id: 1,
-              name: 'My Kids',
-              podcast_id: 1,
-              enabled: true
-          },
-          {
-              id: 2,
-              name: 'My Interests',
-              podcast_id: 1,
-              enabled: true
-          },
-          {
-              id: 3,
-              name: 'Empty category',
-              podcast_id: 1,
-              enabled: true
-          },
-      ],
-
-      questions: [
-          {
-              id: 5,
-              parent_id: null,
-              name: 'MY KIDS',
-              type: 'container',
-              custom_type: 'container',
-          },
-          {
-              id: 6,
-              parent_id: 5,
-              name: 'Number of children',
-              type: 'input',
-              custom_type: 'number',
-          },
-          {
-              id: 7,
-              parent_id: 6,
-              name: 'Age category of children',
-              type: 'select',
-              custom_type: 'tags',
-          },
-          {
-              id: 8,
-              parent_id: 6,
-              name: 'SPECIAL NEEDS',
-              type: 'container',
-              custom_type: 'container',
-          },
-          {
-              id: 9,
-              parent_id: 8,
-              name: 'Do you children relate to any of these?',
-              type: 'select',
-              custom_type: 'tag',
-          },
-
-          {
-              id: 10,
-              parent_id: null,
-              name: 'MY LIFE EVENTS',
-              type: 'container',
-              custom_type: 'container',
-          },
-          {
-              id: 11,
-              parent_id: 10,
-              name: 'Which have you experienced recently?',
-              type: 'select',
-              custom_type: 'list',
-          },
-      ],
-
-      categories_questions: [
-        {
-          id: 1,
-          category_id: 1,
-          question_id: 5,
-          order: 1,
-        },
-        {
-          id: 2,
-          category_id: 2,
-          question_id: 10,
-          order: 1,
-        },
-      ],
-
-      question_params: [
-        {
-          id: 1,
-          category_id: 1,
-          question_id: 7,
-          name: '',
-          value: '',
-        }
-      ],
-
+    this.state = Object.assign(data, {
       // Current selected podcast
       selectedPodcast: null,
 
@@ -144,7 +29,10 @@ export default class Questionnaire extends React.Component {
 
       // New category temporary store
       newCategory: { ...this.emptyCategory },
-    };
+    });
+
+    // Clone and save application state
+    this.savedState = JSON.parse(JSON.stringify(this.state));
   }
 
   componentDidMount() {
@@ -163,9 +51,16 @@ export default class Questionnaire extends React.Component {
       tolerance: 'pointer',
       toleranceElement: '> div',
       maxLevels: 1,
-      isTree: false,
+      isTree: true,
       expandOnHover: 700,
       startCollapsed: false,
+      stop: (e) => {
+        $(e.target).find('li').each((order, item) => {
+          const itemId = $(item).data('id');
+          const sortableName = $(item).data('sortable-name');
+          Object.assign(this.state[sortableName].find(({id}) => id === itemId), { order });
+        });
+      }
     });
   }
 
@@ -220,7 +115,7 @@ export default class Questionnaire extends React.Component {
     this.setState({
       podcasts: this.state.podcasts,
       newPodcast: { ...this.emptyPodcast }
-    });
+    },);
   }
 
   /**
@@ -358,7 +253,7 @@ export default class Questionnaire extends React.Component {
               <ol ref="podcasts" class="sortable">
                 {
                   this.state.podcasts.map((podcast) => (
-                    <li key={podcast.id} class={classNames({ 'selected': podcast.isSelected })}>
+                    <li key={podcast.id} data-id={podcast.id} data-sortable-name="podcasts" class={classNames({ 'selected': podcast.isSelected })}>
                       <div class={classNames('box box-solid box-primary podcast', {'collapsed-box': !podcast.isExpanded })}>
                         <div class="box-header with-border" onClick={this.onPodcastSelect.bind(this, podcast)}>
                           <h3 class="box-title">{podcast.name}</h3>
@@ -450,7 +345,7 @@ export default class Questionnaire extends React.Component {
               <ol ref="categories" class="sortable">
                 {
                   this.state.categories.filter(({ podcast_id }) => podcast_id === this.state.selectedPodcast).map((category) => (
-                    <li key={category.id} class={classNames({ 'selected': category.isSelected })}>
+                    <li key={category.id} data-id={category.id} data-sortable-name="categories" class={classNames({ 'selected': category.isSelected })}>
                       <div class={classNames('box box-solid box-primary podcast', {'collapsed-box': !category.isExpanded })}>
                         <div class="box-header with-border" onClick={this.onCategorySelect.bind(this, category)}>
                           <h3 class="box-title">{category.name}</h3>
