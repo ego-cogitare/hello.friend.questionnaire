@@ -1,0 +1,227 @@
+.clear:after {
+  clear: both;
+  content: "";
+  display: block;
+}
+
+.file-manager .directory-list .file {
+  display: block;
+  width: 128px;
+  height: 128px;
+  border: 1px solid #cccccc;
+  margin: 5px;
+  padding: 20px 20px 0 20px;
+  float: left;
+}
+
+.file-manager .directory-list .file:last-child:after {
+  clear: both;
+  content: "";
+  display: block;
+}
+
+.file-manager .directory-list .file.selected {
+  /*border: 1px dashed #1289A5;*/
+  background-color: rgba(212, 242, 255, 0.71);
+}
+
+.file-manager .directory-list .file .title {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-top: 6px;
+  text-align: center;
+}
+
+.file-manager .directory-list .file .type-icon {
+  width: 100%;
+  height: 75%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+}
+
+.file-manager .tool-bar {
+  margin: 5px;
+}
+
+.file-manager .tool-bar > DIV {
+  float: left;
+}
+
+.file-manager .tool-bar .filter {
+  width: 200px;
+  float: right;
+}
+
+.file-manager .tool-bar .view-changer {
+  float: right;
+  display: none;
+}
+
+.file-manager .tool-bar .filter INPUT {
+  outline: none;
+  width: 227px;
+}
+
+.file-manager .tool-bar .parent-dir {
+  margin: 0 24px 0 0;
+  cursor: pointer;
+}
+
+.file-manager .tool-bar .view-changer > DIV,
+.file-manager .tool-bar .file-operations > DIV,
+.file-manager .tool-bar .parent-dir {
+  float: left;
+  width: 32px;
+  height: 32px;
+  text-align: center;
+  border: 1px solid #cccccc;
+  border-radius: 3px;
+}
+
+.file-manager .tool-bar .file-operations > DIV {
+  margin-left: 3px;
+  cursor: pointer;
+}
+
+.file-manager .tool-bar .view-changer .previews {
+  border-radius: 3px 0 0 3px;
+  border-right: none;
+  cursor: pointer;
+}
+
+.file-manager .tool-bar .view-changer .table {
+  border-radius: 0 3px 3px 0;
+  cursor: pointer;
+}
+
+.file-manager .tool-bar .parent-dir:before {
+  /*content: "\f148";*/
+  content: "\f062";
+  font: 16px/32px FontAwesome;
+}
+
+.file-manager .tool-bar .view-changer .previews:before {
+  content: "\f00a";
+  font: 16px/32px FontAwesome;
+}
+
+.file-manager .tool-bar .view-changer .table:before {
+  content: "\f00b";
+  font: 16px/32px FontAwesome;
+}
+
+.file-manager .tool-bar .file-operations .new-folder:before {
+  font: 16px/32px FontAwesome;
+  content: "\f07b";
+}
+
+.file-manager .tool-bar .file-operations .upload:before {
+  content: "\f093";
+  font: 16px/32px FontAwesome;
+}
+
+.file-manager .tool-bar .file-operations .download:before {
+  content: "\f019";
+  font: 16px/32px FontAwesome;
+}
+
+.file-manager .tool-bar .file-operations .delete:before {
+  content: "\f1f8";
+  font: 16px/32px FontAwesome;
+}
+
+.file-manager .tool-bar .breadcumps .breadcump:after,
+.file-manager .tool-bar .breadcumps .breadcump:before {
+  font: 16px/32px Fontawesome;
+}
+
+.file-manager .breadcumps {
+  border: 1px solid transparent;
+}
+
+.file-manager .tool-bar .breadcumps:after {
+  content: "";
+  clear: both;
+  display: block;
+}
+
+.file-manager .breadcumps .breadcump {
+  float: left;
+  margin-right: 8px;
+  line-height: 32px;
+  /*text-transform: capitalize;*/
+  cursor: pointer;
+  color: #1289A0;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-manager .breadcumps .breadcump:first-child {
+  margin-left: 11px;
+}
+
+.file-manager .breadcumps .breadcump:first-child:before {
+  content: "\f015";
+}
+
+.file-manager .breadcumps .breadcump:after {
+  content: "\f105";
+  display: block;
+  float: right;
+  padding-left: 8px;
+  margin-top: 0;
+}
+
+.file-manager .breadcumps .breadcump:last-child {
+  cursor: default;
+  text-decoration: none;
+  color: #777777;
+}
+
+.file-manager .breadcumps .breadcump:last-child:after {
+  content: "";
+  clear: both;
+}
+
+.file-manager .tool-bar .disabled {
+  cursor: default !important;
+  color: #cccccc;
+}
+
+
+/* File manager uploading file popup styles */
+.file-upload .drop-area {
+  outline: 5px dashed #ccc;
+  width: 100%;
+  height: 86px;
+  line-height: 86px;
+  text-align: center;
+}
+
+.file-upload .drop-area.hovered {
+  outline-color: #000;
+}
+
+.file-upload .uploading-files {
+  margin-top: 20px;
+}
+
+.file-upload .uploading-files:empty {
+  margin-top: 0;
+}
+
+.file-upload .uploading-files .uploading-file .progress-group .progress.sm {
+  margin-bottom: 0;
+}
+
+.file-upload .uploading-files .uploading-file .progress-message {
+  height: 25px;
+  font-size: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

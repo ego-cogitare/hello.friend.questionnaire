@@ -1,0 +1,46 @@
+{
+  "name": "react-admin-panel",
+  "version": "1.0.0",
+  "description": "ReactJS boilerplate",
+  "author": "Alexander Bogish",
+  "license": "BSD-2-Clause",
+  "main": "app.js",
+  "scripts": {
+    "dev": "./node_modules/.bin/webpack-dev-server --config webpack.config.dev.js --content-base public --inline --hot --host 127.0.0.1 --port 8888",
+    "build": "./node_modules/.bin/webpack --config webpack.config.prod.js -p",
+    "server": "./node_modules/.bin/http-server"
+  },
+  "devDependencies": {
+    "babel": "~6.5.2",
+    "babel-core": "~6.18.2",
+    "babel-loader": "~6.2.8",
+    "babel-plugin-react-css-modules": "0.0.0",
+    "babel-plugin-react-html-attrs": "~2.0.0",
+    "babel-plugin-transform-class-properties": "~6.19.0",
+    "babel-plugin-transform-decorators-legacy": "~1.3.4",
+    "babel-preset-es2015": "~6.18.0",
+    "babel-preset-react": "~6.16.0",
+    "babel-preset-stage-0": "~6.16.0",
+    "css-loader": "^0.26.0",
+    "extract-text-webpack-plugin": "^1.0.1",
+    "file-loader": "^0.9.0",
+    "html-minifier": "^3.2.3",
+    "html-webpack-plugin": "^2.26.0",
+    "http-server": "~0.9.0",
+    "style-loader": "^0.13.1",
+    "url-loader": "^0.5.7",
+    "webpack": "~1.13.3",
+    "webpack-cleanup-plugin": "^0.4.1",
+    "webpack-dev-server": "~1.16.2"
+  },
+  "dependencies": {
+    "classnames": "^2.2.5",
+    "history": "~1.17.0",
+    "icheck": "^1.0.2",
+    "react": "~15.4.1",
+    "react-css-modules": "^4.1.0",
+    "react-dom": "~15.4.1",
+    "react-icheck": "^0.3.8",
+    "react-ui-tree": "^3.1.0"
+  }
+}

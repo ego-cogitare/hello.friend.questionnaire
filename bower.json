@@ -1,0 +1,27 @@
+{
+  "name": "courses",
+  "description": "",
+  "main": "app.js",
+  "authors": [
+    "Alexander Bogish <ego.cogitare@gmail.com>"
+  ],
+  "license": "BSD-2-Clause",
+  "homepage": "https://github.com/ego-cogitare/reactjs-boilerplate",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/vendors",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "2.0.3",
+    "font-awesome": "fontawesome#^4.7.0",
+    "bootstrap": "^3.3.7",
+    "datatable": "1.10.15",
+    "select2": "^4.0.0",
+    "trumbowyg": "^2.8.1"
+  }
+}

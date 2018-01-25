@@ -1,0 +1,17 @@
+.notification-container {
+  width: 280px;
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  z-index: 9999;
+}
+
+.notification-container > .notification {
+  margin-bottom: 0;
+}
+
+.notification-container > .notification H4 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
