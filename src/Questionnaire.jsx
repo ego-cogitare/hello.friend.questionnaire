@@ -2,14 +2,14 @@ import React from 'react';
 import classNames from 'classnames';
 import { Checkbox } from 'react-icheck';
 import './staticFiles/css/styles.css';
-import data from './mock';
-import a from './data';
-console.log(a)
 
 export default class Questionnaire extends React.Component {
 
   constructor(props) {
     super(props);
+
+    // Podcasts identities
+    this.podcastIdentities = [];
 
     // Empty podcast
     this.emptyPodcast = { name: '', enabled: true, order: 999, isNew: true };
@@ -17,22 +17,37 @@ export default class Questionnaire extends React.Component {
     // Empty category
     this.emptyCategory = { name: '', podcast_id: null, enabled: true, order: 999, isNew: true };
 
-    this.state = Object.assign(data, {
+    this.state = {
+
+      // Retreive once on page load
+      podcasts: [
+        {
+          id: 2,
+          name: 'Office workers'
+        }
+      ],
+
+      categories: [],
+
+      category_questions: [],
+
+      question_params: [],
+
       // Current selected podcast
       selectedPodcast: null,
 
       // Current selected category
       selectedCategory: null,
 
+      // Current selected category
+      selectedQuestion: null,
+
       // New podcast temporary store
       newPodcast: { ...this.emptyPodcast },
 
       // New category temporary store
       newCategory: { ...this.emptyCategory },
-    });
-
-    // Clone and save application state
-    this.savedState = JSON.parse(JSON.stringify(this.state));
+    };
   }
 
   componentDidMount() {
@@ -64,22 +79,51 @@ export default class Questionnaire extends React.Component {
     });
   }
 
+  /*
+   * Set selected flag (isSelected property) false
+   */
+  resetSelection(items, selectId = null) {
+    items.forEach((item) => {
+      Object.assign(item, { isSelected: false });
+      selectId &&  item.id === selectId && Object.assign(item, { isSelected: true });
+    });
+  }
+
+  /*
+   * Get podcast identity
+   */
+  getPodcastIdentity(podcastId) {
+    let identity = this.podcastIdentities.find(({id}) => podcastId);
+
+    // If podcast found in identities storrage
+    if (identity) {
+      return identity;
+    }
+
+    // Retreive podcast from server
+    let { status, podcast } = $.ajax({
+      type: 'GET',
+      url: '/data.json',
+      async: false,
+    }).responseJSON;
+
+    if (status) {
+      // Add podcast to podcast identities
+      this.podcastIdentities.push(podcast);
+      return podcast;
+    }
+  }
+
   onPodcastSelect(podcast) {
     // Mark current podcast as selected
-    this.state.podcasts.map((p) => {
-      Object.assign(p, { isSelected: podcast.id === p.id });
-      return p;
-    });
+    this.resetSelection(this.state.podcasts, podcast.id);
 
-    // Mark all categories as unselected
-    this.state.categories.map((c) => {
-      Object.assign(c, { isSelected: false })
-      return c;
-    });
+    // Get all podcast categories
+    const categories = this.getPodcastIdentity(podcast.id).categories;
 
     this.setState({
       podcasts: this.state.podcasts,
-      categories: this.state.categories,
+      categories,
       selectedPodcast: podcast.id,
       selectedCategory: null
     },
@@ -154,25 +198,27 @@ export default class Questionnaire extends React.Component {
 
 
 
-
+  /**
+   * Category select
+   */
   onCategorySelect(category) {
     // Mark current category as selected
-    this.state.categories.map((c) => {
-      Object.assign(c, { isSelected: category.id === c.id });
-      return c;
-    });
+    this.resetSelection(this.state.categories, category.id);
 
-    // Mark all questions as unselected
-    this.state.questions.map((q) => {
-      Object.assign(q, { isSelected: false })
-      return q;
-    });
+    // Get all category questions
+    const category_questions = category.category_questions;
 
     this.setState({
+      // To update category selection marker
       categories: this.state.categories,
-      selectedCategory: category.id
+
+      // List of category questions
+      category_questions,
+
+      // Save link to current selected category
+      selectedCategory: category
     },
-    () => this.initSortable(this.refs.questions));
+    () => this.initSortable(this.refs.category_questions));
   }
 
   /**
@@ -239,6 +285,21 @@ export default class Questionnaire extends React.Component {
     e.preventDefault();
     Object.assign(category, { name: this.refs[`category-${category.id}`].value });
     this.setState({ categories: this.state.categories });
+  }
+
+
+  /*
+   * Expand/collapse question edit form
+   */
+  onQuestionEdit(category_question, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    Object.assign(category_question, { isExpanded: !category_question.isExpanded });
+    this.setState({ category_questions: this.state.category_questions });
+  }
+
+  onQuestionRemove(category_question, e) {
+    console.log(category_question);
   }
 
   render() {
@@ -344,7 +405,7 @@ export default class Questionnaire extends React.Component {
               <h4 class="box-title">Podcast Categories</h4>
               <ol ref="categories" class="sortable">
                 {
-                  this.state.categories.filter(({ podcast_id }) => podcast_id === this.state.selectedPodcast).map((category) => (
+                  this.state.categories.map((category) => (
                     <li key={category.id} data-id={category.id} data-sortable-name="categories" class={classNames({ 'selected': category.isSelected })}>
                       <div class={classNames('box box-solid box-primary podcast', {'collapsed-box': !category.isExpanded })}>
                         <div class="box-header with-border" onClick={this.onCategorySelect.bind(this, category)}>
@@ -388,7 +449,7 @@ export default class Questionnaire extends React.Component {
                   ))
                 }
                 {
-                  this.state.categories.filter(({ podcast_id }) => podcast_id === this.state.selectedPodcast).length === 0 &&
+                  this.state.categories.length === 0 &&
                   <p>No categories available.</p>
                 }
               </ol>
@@ -434,19 +495,61 @@ export default class Questionnaire extends React.Component {
                 </div>
               }
             </div>
-            <div class="col-md-4">
-              <ol ref="questions" class="sortable">
-                <h4 class="box-title">Category Questions</h4>
-                {
-                  this.state.categories_questions.map(({id, category_id, question_id}) => {
-                    // Search question in questions list
-                    const question = this.state.questions
-                      .find(({id}) => id === question_id && this.state.selectedCategory === category_id);
 
-                      return null;
-                  })
+
+            <div class="col-md-4">
+              <h4 class="box-title">Category Questions</h4>
+              <ol ref="category_questions" class="sortable">
+                {
+                  this.state.category_questions.map((category_question) => (
+                    <li key={category_question.id} data-id={category_question.id} data-sortable-name="category_questions">
+                      <div class={classNames('box box-solid box-primary podcast', {'collapsed-box': !category_question.isExpanded })}>
+                        <div class="box-header with-border">
+                          <h3 class="box-title">{category_question.question.name}</h3>
+                          <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-box-tool" onClick={this.onQuestionEdit.bind(this, category_question)}><i class="fa fa-pencil"></i>
+                            </button>
+                            <button type="button" class="btn btn-box-tool" onClick={this.onQuestionRemove.bind(this, category_question)}><i class="fa fa-times"></i>
+                            </button>
+                          </div>
+                        </div>
+                        <div class="box-body">
+                          <label>Category title</label>
+                          <div class="form-group">
+                            <input
+                              type="text"
+                              ref={`category-${category_question.id}`}
+                              placeholder="Type Category Name..."
+                              class="form-control"
+                              defaultValue={category_question.question.name}
+                            />
+                          </div>
+                          <label>Enabled</label>
+                          <div class="form-group no-margin">
+                            <Checkbox
+                              checkboxClass="icheckbox_square-blue"
+                              increaseArea="20%"
+                              checked={category_question.enabled}
+                              onChange={(e) => {
+                                Object.assign(category_question, { enabled: !e.target.checked });
+                                this.setState({ category_questions: this.state.category_questions });
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div class="box-footer">
+                          <button type="submit" class="btn btn-primary btn-flat" onClick={this.onCategorySave.bind(this, category_question)}>Save</button>
+                        </div>
+                      </div>
+                    </li>
+                  ))
                 }
+                { this.state.category_questions.length === 0 && <p>No questions available.</p> }
               </ol>
+
+
+
+
             </div>
           </div>
 

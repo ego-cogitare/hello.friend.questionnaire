@@ -1,4 +1,4 @@
-module.exports = {
+{
     "status": true,
     "podcast": {
         "id": 2,
@@ -4629,4 +4629,4 @@ module.exports = {
             }
         ]
     }
-};
+}
