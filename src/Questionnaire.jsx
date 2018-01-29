@@ -2,6 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { Checkbox } from 'react-icheck';
 import './staticFiles/css/styles.css';
+import QuestionWidget from './widgets/QuestionWidget.jsx';
 
 export default class Questionnaire extends React.Component {
 
@@ -29,8 +30,10 @@ export default class Questionnaire extends React.Component {
 
       categories: [],
 
+      // Questions of the selected category
       category_questions: [],
 
+      // Question params of the selected category
       question_params: [],
 
       // Current selected podcast
@@ -187,7 +190,7 @@ export default class Questionnaire extends React.Component {
     this.setState({ podcasts });
   }
 
-  /*
+  /**
    * Podcast name update
    */
   onPodcastSave(podcast, e) {
@@ -208,12 +211,18 @@ export default class Questionnaire extends React.Component {
     // Get all category questions
     const category_questions = category.category_questions;
 
+    // Get all category question params
+    const question_params = category.question_params;
+
     this.setState({
       // To update category selection marker
       categories: this.state.categories,
 
       // List of category questions
       category_questions,
+
+      // List of category question params
+      question_params,
 
       // Save link to current selected category
       selectedCategory: category
@@ -278,7 +287,7 @@ export default class Questionnaire extends React.Component {
     this.setState({ categories });
   }
 
-  /*
+  /**
    * Category name update
    */
   onCategorySave(category, e) {
@@ -288,7 +297,7 @@ export default class Questionnaire extends React.Component {
   }
 
 
-  /*
+  /**
    * Expand/collapse question edit form
    */
   onQuestionEdit(category_question, e) {
@@ -300,6 +309,19 @@ export default class Questionnaire extends React.Component {
 
   onQuestionRemove(category_question, e) {
     console.log(category_question);
+  }
+
+  /**
+   * Get list of question params for category question
+   */
+  getQuestionParams(category_question) {
+    return this.state.question_params.filter(
+      ({question_id, category_id}) => question_id === category_question.question_id && category_id === category_question.category_id
+    );
+  }
+
+  onQuestionWidgetSave(widgetState) {
+    console.log('onQuestionWidgetSave', widgetState);
   }
 
   render() {
@@ -498,7 +520,7 @@ export default class Questionnaire extends React.Component {
 
 
             <div class="col-md-4">
-              <h4 class="box-title">Category Questions</h4>
+              <h4 class="box-title">Question Parametres</h4>
               <ol ref="category_questions" class="sortable">
                 {
                   this.state.category_questions.map((category_question) => (
@@ -513,33 +535,11 @@ export default class Questionnaire extends React.Component {
                             </button>
                           </div>
                         </div>
-                        <div class="box-body">
-                          <label>Category title</label>
-                          <div class="form-group">
-                            <input
-                              type="text"
-                              ref={`category-${category_question.id}`}
-                              placeholder="Type Category Name..."
-                              class="form-control"
-                              defaultValue={category_question.question.name}
-                            />
-                          </div>
-                          <label>Enabled</label>
-                          <div class="form-group no-margin">
-                            <Checkbox
-                              checkboxClass="icheckbox_square-blue"
-                              increaseArea="20%"
-                              checked={category_question.enabled}
-                              onChange={(e) => {
-                                Object.assign(category_question, { enabled: !e.target.checked });
-                                this.setState({ category_questions: this.state.category_questions });
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div class="box-footer">
-                          <button type="submit" class="btn btn-primary btn-flat" onClick={this.onCategorySave.bind(this, category_question)}>Save</button>
-                        </div>
+                        <QuestionWidget
+                          categoryQuestion={category_question}
+                          questionParams={this.getQuestionParams(category_question)}
+                          onSave={this.onQuestionWidgetSave.bind(this)}
+                        />
                       </div>
                     </li>
                   ))

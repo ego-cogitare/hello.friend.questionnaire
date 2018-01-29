@@ -118,7 +118,7 @@
                             "created_at": "2018-01-25 15:32:22",
                             "updated_at": "2018-01-25 15:32:22",
                             "name": "About me",
-                            "type": 2,
+                            "type": 0,
                             "parent_id": null,
                             "custom_type": null,
                             "questions": []
@@ -312,6 +312,15 @@
                         "question_id": 1,
                         "name": "list",
                         "value": "1",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 189348,
+                        "created_at": "2018-01-25 15:32:39",
+                        "updated_at": "2018-01-25 15:32:39",
+                        "question_id": 1,
+                        "name": "values",
+                        "value": "",
                         "category_id": 8
                     },
                     {
@@ -535,8 +544,8 @@
                         "created_at": "2018-01-25 15:32:43",
                         "updated_at": "2018-01-25 15:32:43",
                         "question_id": 6,
-                        "name": "min_selected",
-                        "value": "1",
+                        "name": "max_length",
+                        "value": "100",
                         "category_id": 8
                     },
                     {
@@ -544,8 +553,8 @@
                         "created_at": "2018-01-25 15:32:43",
                         "updated_at": "2018-01-25 15:32:43",
                         "question_id": 6,
-                        "name": "max_selected",
-                        "value": "3",
+                        "name": "min_length",
+                        "value": "null",
                         "category_id": 8
                     },
                     {
@@ -553,8 +562,8 @@
                         "created_at": "2018-01-25 15:32:43",
                         "updated_at": "2018-01-25 15:32:43",
                         "question_id": 6,
-                        "name": "allow_custom",
-                        "value": "1",
+                        "name": "textarea",
+                        "value": "true",
                         "category_id": 8
                     },
                     {
@@ -562,26 +571,8 @@
                         "created_at": "2018-01-25 15:32:43",
                         "updated_at": "2018-01-25 15:32:43",
                         "question_id": 6,
-                        "name": "item_name",
-                        "value": "Item",
-                        "category_id": 8
-                    },
-                    {
-                        "id": 377,
-                        "created_at": "2018-01-25 15:32:43",
-                        "updated_at": "2018-01-25 15:32:43",
-                        "question_id": 6,
-                        "name": "tiles",
-                        "value": "1",
-                        "category_id": 8
-                    },
-                    {
-                        "id": 378,
-                        "created_at": "2018-01-25 15:32:43",
-                        "updated_at": "2018-01-25 15:32:43",
-                        "question_id": 6,
-                        "name": "list",
-                        "value": "1",
+                        "name": "placeholder",
+                        "value": "",
                         "category_id": 8
                     },
                     {
