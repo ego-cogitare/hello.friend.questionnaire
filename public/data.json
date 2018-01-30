@@ -320,7 +320,7 @@
                         "updated_at": "2018-01-25 15:32:39",
                         "question_id": 1,
                         "name": "values",
-                        "value": "",
+                        "value": "[{id: 1, value: 'Item #1'}, {id: 2, value: 'Item #2'}]",
                         "category_id": 8
                     },
                     {

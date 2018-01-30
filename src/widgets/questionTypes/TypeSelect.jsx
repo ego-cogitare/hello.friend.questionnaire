@@ -28,23 +28,44 @@ export default class TypeSelect extends React.Component {
           this.state.questionParams.map((param) => {
             // If allow_custom parameter is changed - need to rerender view to hide
             // or show "Custom Add <Item>" field
-            if (param.name === 'allow_custom') {
+            if (['allow_custom', 'tiles'].indexOf(param.name) !== -1) {
               return (
                 <ParamWidget
                   key={param.id}
                   param={param}
-                  onChange={() => this.setState({ questionParams: this.state.questionParams })}
+                  onChange={() => this.setState({
+                    questionParams: this.state.questionParams
+                  })}
                 />
               );
             }
+
             // Field item_name needs to be shown dependently from "Allow custom item add" field
             if (param.name === 'item_name') {
               // Get "Allow custom item add" parameter value
-              const allowCustom = this.state.questionParams.find(({name}) => name === 'allow_custom').value;
+              const allowCustom = this.state.questionParams
+                .find(({name}) => name === 'allow_custom').value;
 
               // If custom input not allowed
               if (!allowCustom) return null;
             }
+
+            // Field "Items list" renders with additional parameter "withIcon" which is defines
+            // show add icon widget or not
+            if (param.name === 'values') {
+              // Get "Allow custom item add" parameter value
+              const iconsRequired = this.state.questionParams
+                .find(({name}) => name === 'tiles').value;
+
+              return (
+                <ParamWidget
+                  key={param.id}
+                  param={param}
+                  withIcon={iconsRequired}
+                />
+              );
+            }
+
             return <ParamWidget key={param.id} param={param} />;
           })
         }

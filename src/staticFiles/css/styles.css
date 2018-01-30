@@ -29,3 +29,15 @@
 .selected .box.box-solid.box-primary {
   border: 1px solid #f39c12;
 }
+.select-list .select-list-icon-add {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border: 1px dashed #ccc;
+  line-height: 34px;
+  text-align: center;
+  margin: 5px 0 0;
+}
+.select-list .with-icon {
+  width: calc(100% - 37px);
+}

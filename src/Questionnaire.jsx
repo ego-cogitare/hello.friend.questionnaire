@@ -518,7 +518,6 @@ export default class Questionnaire extends React.Component {
               }
             </div>
 
-
             <div class="col-md-4">
               <h4 class="box-title">Question Parametres</h4>
               <ol ref="category_questions" class="sortable">
@@ -546,10 +545,6 @@ export default class Questionnaire extends React.Component {
                 }
                 { this.state.category_questions.length === 0 && <p>No questions available.</p> }
               </ol>
-
-
-
-
             </div>
           </div>
 

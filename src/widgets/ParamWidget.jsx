@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 import { Checkbox } from 'react-icheck';
 
 export default class ParamWidget extends React.Component {
@@ -91,8 +92,93 @@ export default class ParamWidget extends React.Component {
     return this.paramsSettings[paramName].hint;
   }
 
+  addSelectItem() {
+    // Obtain new item value
+    const newItemValue = this.refs['newItemRef'].value;
+
+    // Do nothing if empty value add
+    if (!newItemValue) return false;
+
+    // Add new item to items list
+    this.state.param.value.push({
+      id: Date.now(),
+      value: newItemValue
+    });
+
+    // Clear new item add value
+    this.refs['newItemRef'].value = '';
+
+    // Update view
+    this.setState({ param: this.state.param });
+  }
+
   render() {
     switch (this.state.param.name) {
+      // List of user select items
+      case 'values':
+        return (
+          <div>
+            <label>{this.paramDefLabel(this.state.param.name)}</label>
+            { // Display list of items
+              this.state.param.value.map((item, i) => {
+                return (
+                  <div key={item.id} class="clearfix select-list">
+                    { // Block renders dependently of "Requires tiles" checkbox set or not
+                      this.props.withIcon &&
+                      <div class="pull-left">
+                        <i class="fa fa-plus select-list-icon-add"></i>
+                      </div>
+                    }
+                    <div class={classNames('pull-right input-group', { 'with-icon': this.props.withIcon })} style={{ marginTop:5 }}>
+                      <input
+                        type="text"
+                        class="form-control"
+                        value={item.value}
+                        placeholder="Item value..."
+                        onChange={(e) => {
+                          item.value = e.target.value;
+                          this.setState({ param: this.state.param });
+                        }}
+                      />
+                      <span class="input-group-btn">
+                        <button type="button" class="btn btn-danger btn-flat" onClick={() => {
+                            if (!confirm('Are you sure want to delete this item?')) return false;
+
+                            // Remove item from items list
+                            this.state.param.value = this.state.param.value.filter(({id}) => id !== item.id);
+
+                            // Update items list
+                            this.setState({ param: this.state.param });
+                          }}
+                        >
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            }
+            <div class="input-group" style={{ marginTop:5 }}>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Add new item..."
+                ref="newItemRef"
+                onKeyDown={(e) => e.which === 13 && this.addSelectItem()}
+              />
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-info btn-flat" onClick={this.addSelectItem.bind(this)}
+                >
+                  <i class="fa fa-plus"></i>
+                </button>
+              </span>
+            </div>
+            <p class="help-block">{this.paramDefHint(this.state.param.name)}</p>
+          </div>
+        );
+      break;
+
       // Numeric/Null - max and min length of requeired text
       case 'max_length':
       case 'min_length':
@@ -161,24 +247,6 @@ export default class ParamWidget extends React.Component {
                   this.setState({ param: this.state.param });
                 }}
               />
-              <p class="help-block">{this.paramDefHint(this.state.param.name)}</p>
-            </div>
-          </div>
-        );
-      break;
-
-      case 'values':
-        return (
-          <div>
-            <label>{this.paramDefLabel(this.state.param.name)}</label>
-            <div class="form-group no-margin">
-              <input type="text" class="form-control" defaultValue="Item #1" placeholder="Item value" />
-            </div>
-            <div class="form-group no-margin">
-              <input type="text" class="form-control" defaultValue="Item #2" placeholder="Item value" />
-            </div>
-            <div class="form-group no-margin">
-              <input type="text" class="form-control" defaultValue="Item #3" placeholder="Item value" />
               <p class="help-block">{this.paramDefHint(this.state.param.name)}</p>
             </div>
           </div>
