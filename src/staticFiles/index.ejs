@@ -153,6 +153,15 @@
       <script type="text/javascript" src="http://192.168.1.219:8000/js/adminlte.js"></script>
       <script type="text/javascript" src="http://192.168.1.219:8000/js/jquery.mjs.nestedSortable.js"></script>
       <script type="text/javascript" src="http://192.168.1.219:8000/js/main.js" defer></script>
+      <script>
+        window.paths = {
+          storagePath: 'http://192.168.1.219:8000/storage/',
+          fileUpload: 'http://192.168.1.219:8000/file/upload',
+          podcastSync: 'http://192.168.1.219:8000/admin/podcast/{id}',
+          //podcastFetch: 'http://192.168.1.219:8000/admin/podcast/{id}',
+          //podcastsFetch: 'http://192.168.1.219:8000/admin/podcasts',
+        };
+      </script>
 
       <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
         <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>" defer></script>

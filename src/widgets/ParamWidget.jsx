@@ -1,6 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import { Checkbox } from 'react-icheck';
+import axios, { post } from 'axios';
 
 export default class ParamWidget extends React.Component {
 
@@ -112,6 +113,25 @@ export default class ParamWidget extends React.Component {
     this.setState({ param: this.state.param });
   }
 
+  onSelectItemIconFormSubmit(e) {
+    e.preventDefault();
+
+    post(
+      window.paths.fileUpload || '/file/upload',
+      new FormData(e.target),
+      {headers:{'content-type':'multipart/form-data'}}
+    )
+    .then(({data}) => {
+      // Update select option icon
+      this.state.param.value.forEach((item) => {
+        (item.id === data.optionId) && Object.assign(item, { icon: data.path })
+      });
+
+      // Rerender icons
+      this.setState({ param: this.state.param });
+    });
+  }
+
   render() {
     switch (this.state.param.name) {
       // List of user select items
@@ -125,8 +145,27 @@ export default class ParamWidget extends React.Component {
                   <div key={item.id} class="clearfix select-list">
                     { // Block renders dependently of "Requires tiles" checkbox set or not
                       this.props.withIcon &&
-                      <div class="pull-left">
-                        <i class="fa fa-plus select-list-icon-add"></i>
+                      <div class="pull-left" onClick={() => $(this.refs[`icon-select-file-${item.id}`]).trigger('click')}>
+                        <form style={{display:'none'}} onSubmit={this.onSelectItemIconFormSubmit.bind(this)}>
+                          <input type="hidden" name="optionId" value={item.id} />
+                          <input type="hidden" name="currentIcon" value={item.icon} />
+                          <input
+                            type="file"
+                            name="icon"
+                            ref={`icon-select-file-${item.id}`}
+                            onChange={(e) => {
+                              // Save file nane to upload
+                              // this.selectItemIconFile = e.target.files[0];
+
+                              // Trigger submit button click to send form
+                              $(this.refs[`icon-select-submit-btn-${item.id}`]).trigger('click');
+                            }}
+                          />
+                          <button type="submit" ref={`icon-select-submit-btn-${item.id}`}>Upload</button>
+                        </form>
+                        { item.icon ?
+                            <img width="34" height="34" src={`${window.paths.storagePath || '/'}${item.icon}`} alt={item.icon} style={{marginTop:5}} /> :
+                            <i class="fa fa-plus select-list-icon-add"></i> }
                       </div>
                     }
                     <div class={classNames('pull-right input-group', { 'with-icon': this.props.withIcon })} style={{ marginTop:5 }}>

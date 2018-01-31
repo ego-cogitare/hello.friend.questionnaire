@@ -10,23 +10,33 @@ export default class Questionnaire extends React.Component {
     super(props);
 
     // Podcasts identities
-    this.podcastIdentities = [];
+    this.podcastIdentities =
+    window.podcastIdentities = [];
 
     // Empty podcast
-    this.emptyPodcast = { name: '', enabled: true, order: 999, isNew: true };
+    this.emptyPodcast = {
+      name: '',
+      categories: [],
+      enabled: true,
+      order: 999,
+      isNew: true
+    };
 
     // Empty category
-    this.emptyCategory = { name: '', podcast_id: null, enabled: true, order: 999, isNew: true };
+    this.emptyCategory = {
+      name: '',
+      podcast_id: null,
+      category_questions: [],
+      question_params: [],
+      enabled: true,
+      order: 999,
+      isNew: true
+    };
 
     this.state = {
 
       // Retreive once on page load
-      podcasts: [
-        {
-          id: 2,
-          name: 'Office workers'
-        }
-      ],
+      podcasts: [],
 
       categories: [],
 
@@ -54,7 +64,14 @@ export default class Questionnaire extends React.Component {
   }
 
   componentDidMount() {
-    this.initSortable(this.refs.podcasts);
+    // Fetch list of podcasts
+    $.ajax({
+      type: 'GET',
+      format: 'json',
+      url: window.paths.podcastsFetch || '/podcasts.json',
+      success: (data) => this.setState({ podcasts: data }, () => this.initSortable(this.refs.podcasts)),
+      error: (e) => console.error(e)
+    });
   }
 
   initSortable(ref) {
@@ -95,25 +112,38 @@ export default class Questionnaire extends React.Component {
   /*
    * Get podcast identity
    */
-  getPodcastIdentity(podcastId) {
-    let identity = this.podcastIdentities.find(({id}) => podcastId);
+  getPodcastIdentity(podcast) {
+    console.info(`Get podcast identity: ${podcast.id}`);
+    let identity = this.podcastIdentities.find(({id}) => id === podcast.id);
 
-    // If podcast found in identities storrage
+    // If podcast found in identities storage
     if (identity) {
+      console.info(`Podcast found in identities list:`, identity);
       return identity;
     }
 
+    // If podcast is new - add to podcast identities
+    if (podcast.isNew) {
+      console.info(`Podcast marked as new. Add podcast to podcast identities array.`, podcast);
+      this.podcastIdentities.push(podcast);
+      return podcast;
+    }
+
+    // Build podcast fetch url
+    let fetchUrl = (window.paths.podcastFetch || '').replace('{id}', podcast.id) || '/podcast.json';
+    console.info(`Podcast fetched from url: ${fetchUrl}`);
+
     // Retreive podcast from server
-    let { status, podcast } = $.ajax({
+    let { status, podcast: podcastIdentity } = $.ajax({
       type: 'GET',
-      url: '/data.json',
+      url: fetchUrl,
       async: false,
     }).responseJSON;
 
     if (status) {
       // Add podcast to podcast identities
-      this.podcastIdentities.push(podcast);
-      return podcast;
+      this.podcastIdentities.push(podcastIdentity);
+      return podcastIdentity;
     }
   }
 
@@ -122,11 +152,12 @@ export default class Questionnaire extends React.Component {
     this.resetSelection(this.state.podcasts, podcast.id);
 
     // Get all podcast categories
-    const categories = this.getPodcastIdentity(podcast.id).categories;
+    const categories = this.getPodcastIdentity(podcast).categories;
 
     this.setState({
       podcasts: this.state.podcasts,
       categories,
+      category_questions: [],
       selectedPodcast: podcast.id,
       selectedCategory: null
     },
@@ -193,9 +224,11 @@ export default class Questionnaire extends React.Component {
   /**
    * Podcast name update
    */
-  onPodcastSave(podcast, e) {
-    e.preventDefault();
-    Object.assign(podcast, { name: this.refs[`podcast-${podcast.id}`].value });
+  onPodcastSave(podcast, name) {
+    // Dissallow podcast empty value
+    if (!name) return false;
+
+    Object.assign(podcast, { name });
     this.setState({ podcasts: this.state.podcasts });
   }
 
@@ -290,9 +323,11 @@ export default class Questionnaire extends React.Component {
   /**
    * Category name update
    */
-  onCategorySave(category, e) {
-    e.preventDefault();
-    Object.assign(category, { name: this.refs[`category-${category.id}`].value });
+  onCategorySave(category, name) {
+    // Dissallow category empty names
+    if (!name) return false;
+
+    Object.assign(category, { name });
     this.setState({ categories: this.state.categories });
   }
 
@@ -315,13 +350,29 @@ export default class Questionnaire extends React.Component {
    * Get list of question params for category question
    */
   getQuestionParams(category_question) {
-    return this.state.question_params.filter(
-      ({question_id, category_id}) => question_id === category_question.question_id && category_id === category_question.category_id
-    );
-  }
+    // Container question params need to obtain
+    if (category_question.question.type === 3) {
+      let params = [];
 
-  onQuestionWidgetSave(widgetState) {
-    console.log('onQuestionWidgetSave', widgetState);
+      // Obtain all question params for all child questions
+      category_question.question.questions.forEach((question) => {
+        let questionParams = this.state.question_params.filter(
+          ({question_id, category_id}) => (question_id === question.id && category_id === category_question.category_id)
+        );
+
+        // If no parameters found
+        if (questionParams.length === 0) {
+          console.error(`No parameters found for: category_id - ${category_question.category_id}, question_id - ${question.id}. Question:`, question);
+          return;
+        }
+        params = params.concat(questionParams);
+      });
+      return params;
+    }
+
+    return this.state.question_params.filter(
+      ({question_id, category_id}) => (question_id === category_question.question_id && category_id === category_question.category_id)
+    );
   }
 
   render() {
@@ -352,11 +403,10 @@ export default class Questionnaire extends React.Component {
                           <div class="form-group">
                             <input
                               type="text"
-                              ref={`podcast-${podcast.id}`}
                               placeholder="Type Podcast Name..."
                               class="form-control"
                               defaultValue={podcast.name}
-                              onKeyUp={(e) => e.which === 13 && this.onPodcastSave(podcast, e)}
+                              onKeyUp={(e) => e.which === 13 && this.onPodcastSave(podcast, e.target.value)}
                             />
                           </div>
                           <label>Enabled</label>
@@ -371,9 +421,6 @@ export default class Questionnaire extends React.Component {
                               }}
                             />
                           </div>
-                        </div>
-                        <div class="box-footer">
-                          <button type="submit" class="btn btn-primary btn-flat" onClick={this.onPodcastSave.bind(this, podcast)}>Save</button>
                         </div>
                       </div>
                     </li>
@@ -444,10 +491,10 @@ export default class Questionnaire extends React.Component {
                           <div class="form-group">
                             <input
                               type="text"
-                              ref={`category-${category.id}`}
                               placeholder="Type Category Name..."
                               class="form-control"
                               defaultValue={category.name}
+                              onKeyUp={(e) => e.which === 13 && this.onCategorySave(category, e.target.value)}
                             />
                           </div>
                           <label>Enabled</label>
@@ -462,9 +509,6 @@ export default class Questionnaire extends React.Component {
                               }}
                             />
                           </div>
-                        </div>
-                        <div class="box-footer">
-                          <button type="submit" class="btn btn-primary btn-flat" onClick={this.onCategorySave.bind(this, category)}>Save</button>
                         </div>
                       </div>
                     </li>
@@ -537,7 +581,6 @@ export default class Questionnaire extends React.Component {
                         <QuestionWidget
                           categoryQuestion={category_question}
                           questionParams={this.getQuestionParams(category_question)}
-                          onSave={this.onQuestionWidgetSave.bind(this)}
                         />
                       </div>
                     </li>
@@ -550,8 +593,7 @@ export default class Questionnaire extends React.Component {
 
         </div>
         <div class="box-footer">
-          <button type="submit" class="btn btn-primary pull-right">Publish changes</button>
-          <button type="submit" class="btn btn-default pull-right">Cancel</button>
+          <button type="submit" class="btn btn-primary pull-right">Synchronize changes</button>
         </div>
       </div>
     );

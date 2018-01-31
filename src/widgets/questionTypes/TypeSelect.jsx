@@ -16,8 +16,6 @@ export default class TypeSelect extends React.Component {
       categoryQuestion: props.categoryQuestion,
       questionParams: props.questionParams,
     };
-
-    console.log(this.state.questionParams);
   }
 
   render() {
@@ -70,9 +68,9 @@ export default class TypeSelect extends React.Component {
           })
         }
         </div>
-        <div class="box-footer">
+        {/*<div class="box-footer">
           <button type="submit" class="btn btn-primary btn-flat" onClick={() => this.props.onSave(this.state)}>Save</button>
-        </div>
+        </div>*/}
       </div>
     );
   }

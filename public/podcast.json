@@ -320,7 +320,7 @@
                         "updated_at": "2018-01-25 15:32:39",
                         "question_id": 1,
                         "name": "values",
-                        "value": "[{id: 1, value: 'Item #1'}, {id: 2, value: 'Item #2'}]",
+                        "value": "[{id: 1, value: 'Item #1', icon: 'icons/r6NE7TXio48orGG5ow6kui4fE4munOY63adTLrWg.jpeg'}, {id: 2, value: 'Item #2'}]",
                         "category_id": 8
                     },
                     {
@@ -654,6 +654,136 @@
                         "question_id": 8,
                         "name": "placeholder",
                         "value": "0",
+                        "category_id": 8
+                    },
+
+
+                    {
+                        "id": 1373,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 9,
+                        "name": "max_length",
+                        "value": "100",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 1374,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 9,
+                        "name": "min_length",
+                        "value": "null",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 1376,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 9,
+                        "name": "placeholder",
+                        "value": "",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 1373,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 10,
+                        "name": "max_length",
+                        "value": "100",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 1374,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 10,
+                        "name": "min_length",
+                        "value": "null",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 1376,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 10,
+                        "name": "placeholder",
+                        "value": "",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 1373,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 11,
+                        "name": "max_length",
+                        "value": "100",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 1374,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 11,
+                        "name": "min_length",
+                        "value": "null",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 1376,
+                        "created_at": "2018-01-25 15:32:43",
+                        "updated_at": "2018-01-25 15:32:43",
+                        "question_id": 11,
+                        "name": "placeholder",
+                        "value": "",
+                        "category_id": 8
+                    },
+
+
+                    {
+                        "id": 10385,
+                        "created_at": "2018-01-25 15:32:44",
+                        "updated_at": "2018-01-25 15:32:44",
+                        "question_id": 12,
+                        "name": "max_value",
+                        "value": "999",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 10386,
+                        "created_at": "2018-01-25 15:32:44",
+                        "updated_at": "2018-01-25 15:32:44",
+                        "question_id": 12,
+                        "name": "min_value",
+                        "value": "0",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 10387,
+                        "created_at": "2018-01-25 15:32:44",
+                        "updated_at": "2018-01-25 15:32:44",
+                        "question_id": 12,
+                        "name": "placeholder",
+                        "value": "",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 11349,
+                        "created_at": "2018-01-25 15:32:39",
+                        "updated_at": "2018-01-25 15:32:39",
+                        "question_id": 13,
+                        "name": "values",
+                        "value": "[{id: 1, value: 'Pregnant to 6 months'}, {id: 2, value: '7 monts to 3 years'}, {id: 3, value: '4 to 6 years'}, {id: 4, value: '7 to 11 years'}, {id: 5, value: '12 to 19 years'}, {id: 6, value: '20 and older'}]",
+                        "category_id": 8
+                    },
+                    {
+                        "id": 11349,
+                        "created_at": "2018-01-25 15:32:39",
+                        "updated_at": "2018-01-25 15:32:39",
+                        "question_id": 14,
+                        "name": "values",
+                        "value": "[{id: 1, value: 'Anxiety'}, {id: 2, value: 'Adopted'}, {id: 3, value: 'Foster care'}, {id: 4, value: 'ADD'}, {id: 5, value: 'Autism'}, {id: 6, value: 'Depression'}, {id: 7, value: 'Intellectual or developmental disability'}, {id: 8, value: 'LGBTQ or Questioning'}, {id: 9, value: 'Multiples'}, {id: 10, value: 'Homeschooling'}]",
                         "category_id": 8
                     }
                 ]
