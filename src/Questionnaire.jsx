@@ -3,6 +3,10 @@ import classNames from 'classnames';
 import { Checkbox } from 'react-icheck';
 import './staticFiles/css/styles.css';
 import QuestionWidget from './widgets/QuestionWidget.jsx';
+import questionParams from './questionParams';
+import questionTypeParamsSet from './questionTypeParamsSet';
+import axios, { post } from 'axios';
+import { uniqueId } from './Utils';
 
 export default class Questionnaire extends React.Component {
 
@@ -25,11 +29,23 @@ export default class Questionnaire extends React.Component {
     // Empty category
     this.emptyCategory = {
       name: '',
+      icon: '',
+      type: 1,
       podcast_id: null,
       category_questions: [],
       question_params: [],
       enabled: true,
       order: 999,
+      isNew: true
+    };
+
+    // Empty category
+    this.emptyQuestion = {
+      name: '',
+      parent_id: null,
+      type: '0',
+      custom_type: null,
+      questions: [],
       isNew: true
     };
 
@@ -60,6 +76,9 @@ export default class Questionnaire extends React.Component {
 
       // New category temporary store
       newCategory: { ...this.emptyCategory },
+
+      // New question temporary store
+      newQuestion: { ...this.emptyQuestion },
     };
   }
 
@@ -175,6 +194,14 @@ export default class Questionnaire extends React.Component {
   }
 
   /**
+   * Podcast name update
+   */
+  onPodcastNameUpdate(podcast, name) {
+    Object.assign(podcast, { name });
+    this.setState({ podcasts: this.state.podcasts });
+  }
+
+  /**
    * On podcast add
    */
   onPodcastAdd() {
@@ -184,7 +211,7 @@ export default class Questionnaire extends React.Component {
     }
 
     // Clone temporary podcast
-    const podcast = { ...this.state.newPodcast, id: Date.now() };
+    const podcast = JSON.parse(JSON.stringify({ ...this.state.newPodcast, id: uniqueId() }));
 
     // Add podcast to podcasts list
     this.state.podcasts.push(podcast);
@@ -193,7 +220,7 @@ export default class Questionnaire extends React.Component {
     this.setState({
       podcasts: this.state.podcasts,
       newPodcast: { ...this.emptyPodcast }
-    },);
+    });
   }
 
   /**
@@ -202,6 +229,8 @@ export default class Questionnaire extends React.Component {
   onPodcastRemove(podcast, e) {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!confirm(`Are you sure want to delete this podcast?`)) return false;
 
     // If podcast not stored yet
     if (podcast.isNew) {
@@ -224,13 +253,26 @@ export default class Questionnaire extends React.Component {
   /**
    * Podcast name update
    */
-  onPodcastSave(podcast, name) {
-    // Dissallow podcast empty value
-    if (!name) return false;
+   onPodcastSave(e) {
+     e.preventDefault();
 
-    Object.assign(podcast, { name });
-    this.setState({ podcasts: this.state.podcasts });
-  }
+     // If not podcast is selected
+     if (!this.state.selectedPodcast) return false;
+
+     // Get current selected podcast
+     const podcast = this.getPodcastIdentity({ id: this.state.selectedPodcast });
+
+     // Podcast save url
+     const url = window.paths.podcastSync.replace('{id}', this.state.selectedPodcast);
+
+     $.ajax({
+       url,
+       data: { podcast: JSON.stringify(podcast) },
+       type: 'post',
+       success: (r) => console.log(`Podcast data saved.`, r),
+       error: (e) => console.error(e)
+     });
+   }
 
 
 
@@ -283,7 +325,9 @@ export default class Questionnaire extends React.Component {
     }
 
     // Clone temporary category
-    const category = { ...this.state.newCategory, podcast_id: this.state.selectedPodcast, id: Date.now() };
+    const category = JSON.parse(JSON.stringify(
+      { ...this.state.newCategory,
+        podcast_id: this.state.selectedPodcast, id: uniqueId() }));
 
     // Add category to categories list
     this.state.categories.push(category);
@@ -301,6 +345,8 @@ export default class Questionnaire extends React.Component {
   onCategoryRemove(category, e) {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!confirm(`Are you sure want to delete this category?`)) return false;
 
     // If category not stored yet
     if (category.isNew) {
@@ -323,7 +369,7 @@ export default class Questionnaire extends React.Component {
   /**
    * Category name update
    */
-  onCategorySave(category, name) {
+  onCategoryNameUpdate(category, name) {
     // Dissallow category empty names
     if (!name) return false;
 
@@ -331,20 +377,6 @@ export default class Questionnaire extends React.Component {
     this.setState({ categories: this.state.categories });
   }
 
-
-  /**
-   * Expand/collapse question edit form
-   */
-  onQuestionEdit(category_question, e) {
-    e.preventDefault();
-    e.stopPropagation();
-    Object.assign(category_question, { isExpanded: !category_question.isExpanded });
-    this.setState({ category_questions: this.state.category_questions });
-  }
-
-  onQuestionRemove(category_question, e) {
-    console.log(category_question);
-  }
 
   /**
    * Get list of question params for category question
@@ -373,6 +405,270 @@ export default class Questionnaire extends React.Component {
     return this.state.question_params.filter(
       ({question_id, category_id}) => (question_id === category_question.question_id && category_id === category_question.category_id)
     );
+  }
+
+  /**
+   * Expand/collapse question edit form
+   */
+  onQuestionEdit(category_question, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    Object.assign(category_question, { isExpanded: !category_question.isExpanded });
+    this.setState({ category_questions: this.state.category_questions });
+  }
+
+  onQuestionRemove(category_question, e) {
+    if (!category_question) return false;
+
+    let questionIds = (category_question.question.type == 3)
+      ? category_question.question.questions.map(({id}) => id)
+      : [category_question.question_id];
+
+    // Question removing confirmation
+    if (!confirm(`Are you sure want to delete this question?`)) return false;
+
+    // Remove question from category's questions
+    this.state.category_questions
+      = this.state.category_questions
+        .filter(
+          ({category_id, question_id}) =>
+            !(question_id === category_question.question_id &&
+              category_id === category_question.category_id)
+        );
+
+    // Remove question settings
+    this.state.question_params
+      = this.state.question_params
+        .filter(
+          ({category_id, question_id}) =>
+            !(questionIds.indexOf(question_id) !== -1 &&
+              category_id === category_question.category_id)
+        );
+
+    // Update podcast identity
+    const category = this.getPodcastIdentity({ id: this.state.selectedPodcast })
+      .categories.find(({id}) => id === this.state.selectedCategory.id);
+
+    if (!category) {
+      console.error(`Quistion category not found. Question:`, category_question);
+      return false;
+    }
+
+    // Update podcast identity
+    Object.assign(category, {
+      category_questions: this.state.category_questions,
+      question_params: this.state.question_params,
+    });
+
+    this.setState({
+      category_questions: this.state.category_questions,
+      question_params: this.state.question_params
+    });
+  }
+
+  /**
+   * On question add
+   */
+  onCategoryNewQuestionAdd() {
+    // Can not add empty podcasts or add to unexisting category
+    if (!this.state.newQuestion.name || !this.state.selectedCategory) {
+      return false;
+    }
+
+    // Add basic question
+    if (['0', '1', '2'].indexOf(this.state.newQuestion.type) !== -1) {
+      // Generate question temporary Id
+      const questionId = uniqueId();
+
+      let categoryQuestion = {
+        id: questionId - 1,
+        isNew: true,
+        category_id: this.state.selectedCategory.id,
+        question_id: questionId,
+        order: 999,
+        question:  Object.assign(
+          {},
+          { ...this.state.newQuestion },
+          { id: questionId, type: Number(this.state.newQuestion.type) }
+        )
+      };
+
+      // Add question to category
+      this.state.category_questions.push(categoryQuestion);
+
+      // Create question default params set
+      let questionParams = questionTypeParamsSet[this.state.newQuestion.type]
+        .map(({ name, value }, key) => {
+          return {
+            id: questionId + key + 1,
+            question_id: questionId,
+            category_id: this.state.selectedCategory.id,
+            name,
+            value,
+          };
+        });
+
+      // Add question settings
+      questionParams.forEach((param) => {
+        this.state.question_params.push(param);
+      });
+
+      this.setState(
+        { question_params: this.state.question_params,
+          category_questions: this.state.category_questions,
+          newQuestion: { ...this.emptyQuestion } }
+      );
+    }
+
+    if (['location', 'children'].indexOf(this.state.newQuestion.type) !== -1) {
+
+      // Generate question temporary Id
+      const questionId = uniqueId();
+
+      let categoryQuestion = {
+        id: questionId - 1,
+        isNew: true,
+        category_id: this.state.selectedCategory.id,
+        question_id: questionId,
+        order: 999,
+        question:  Object.assign(
+          {},
+          { ...this.state.newQuestion },
+          { id: questionId,
+            type: 3,
+            name: 'Location',
+            custom_type: this.state.newQuestion.type,
+            questions: []
+          }
+        )
+      };
+
+      // "id": 15,
+      //         "created_at": "2018-01-25 15:32:22",
+      //         "updated_at": "2018-01-25 15:32:22",
+      //         "name": "Location",
+      //         "type": 3,
+      //         "parent_id": null,
+      //         "custom_type": "location",
+      //         "questions": [
+
+      // Add question to category
+      this.state.category_questions.push(categoryQuestion);
+
+      // Create question default params set
+      let questionParams = questionTypeParamsSet[this.state.newQuestion.type]
+        .map(({ name, value }, key) => {
+          return {
+            id: questionId + key + 1,
+            question_id: questionId,
+            category_id: this.state.selectedCategory.id,
+            name,
+            value,
+          };
+        });
+
+      // console.log('questionParams',questionParams);
+
+      // Add question settings
+      questionParams.forEach((param) => {
+        this.state.question_params.push(param);
+      });
+
+      this.setState(
+        { question_params: this.state.question_params,
+          category_questions: this.state.category_questions,
+          newQuestion: { ...this.emptyQuestion } }
+      );
+
+      // console.log(categoryQuestion);
+
+    }
+
+    // {
+    //     "id": 71,
+    //     "created_at": "2018-01-25 15:32:40",
+    //     "updated_at": "2018-01-25 15:32:40",
+    //     "category_id": 8,
+    //     "question_id": 1,
+    //     "order": 71,
+    //     "question": {
+    //         "id": 1,
+    //         "created_at": "2018-01-25 15:32:22",
+    //         "updated_at": "2018-01-25 15:32:22",
+    //         "name": "Pick your Top 3 Personality",
+    //         "type": 2,
+    //         "parent_id": null,
+    //         "custom_type": null,
+    //         "questions": []
+    //     }
+    // },
+    //
+    // {
+    //     "id": 79,
+    //     "created_at": "2018-01-25 15:32:45",
+    //     "updated_at": "2018-01-25 15:32:45",
+    //     "category_id": 8,
+    //     "question_id": 15,
+    //     "order": 79,
+    //     "question": {
+    //         "id": 15,
+    //         "created_at": "2018-01-25 15:32:22",
+    //         "updated_at": "2018-01-25 15:32:22",
+    //         "name": "Location",
+    //         "type": 3,
+    //         "parent_id": null,
+    //         "custom_type": "location",
+    //         "questions": [
+    //             {
+    //                 "id": 9,
+    //                 "created_at": "2018-01-25 15:32:22",
+    //                 "updated_at": "2018-01-25 15:32:22",
+    //                 "name": "City",
+    //                 "type": 0,
+    //                 "parent_id": 15,
+    //                 "custom_type": null,
+    //                 "questions": []
+    //             },
+    //             {
+    //                 "id": 10,
+    //                 "created_at": "2018-01-25 15:32:22",
+    //                 "updated_at": "2018-01-25 15:32:22",
+    //                 "name": "State",
+    //                 "type": 0,
+    //                 "parent_id": 15,
+    //                 "custom_type": null,
+    //                 "questions": []
+    //             },
+    //             {
+    //                 "id": 11,
+    //                 "created_at": "2018-01-25 15:32:22",
+    //                 "updated_at": "2018-01-25 15:32:22",
+    //                 "name": "Zip Code",
+    //                 "type": 0,
+    //                 "parent_id": 15,
+    //                 "custom_type": null,
+    //                 "questions": []
+    //             }
+    //         ]
+    //     }
+    // },
+  }
+
+  onSelectCategoryIconFormSubmit(category, e) {
+    e.preventDefault();
+
+    post(
+      window.paths.fileUpload || '/file/upload',
+      new FormData(e.target),
+      {headers:{'content-type':'multipart/form-data'}}
+    )
+    .then(({data}) => {
+      // Update category icon
+      Object.assign(category, { icon: data.path });
+
+      // Rerender icons
+      this.setState({ categories: this.state.categories });
+    });
   }
 
   render() {
@@ -406,7 +702,7 @@ export default class Questionnaire extends React.Component {
                               placeholder="Type Podcast Name..."
                               class="form-control"
                               defaultValue={podcast.name}
-                              onKeyUp={(e) => e.which === 13 && this.onPodcastSave(podcast, e.target.value)}
+                              onKeyUp={(e) => e.which === 13 && this.onPodcastNameUpdate(podcast, e.target.value)}
                             />
                           </div>
                           <label>Enabled</label>
@@ -414,7 +710,7 @@ export default class Questionnaire extends React.Component {
                             <Checkbox
                               checkboxClass="icheckbox_square-blue"
                               increaseArea="20%"
-                              checked={podcast.enabled}
+                              checked={Boolean(podcast.enabled)}
                               onChange={(e) => {
                                 Object.assign(podcast, { enabled: !e.target.checked });
                                 this.setState({ podcasts: this.state.podcasts });
@@ -487,6 +783,26 @@ export default class Questionnaire extends React.Component {
                           </div>
                         </div>
                         <div class="box-body">
+                          <label>Category icon</label>
+                          <div class="form-group">
+                            <form style={{display:'none'}} onSubmit={this.onSelectCategoryIconFormSubmit.bind(this, category)}>
+                              <input type="hidden" name="categoryId" value={category.id} />
+                              <input type="hidden" name="currentIcon" value={category.icon || ''} />
+                              <input
+                                type="file"
+                                name="icon"
+                                ref={`icon-select-file-${category.id}`}
+                                onChange={(e) => {
+                                  // Trigger submit button click to send form
+                                  $(this.refs[`icon-select-submit-btn-${category.id}`]).trigger('click');
+                                }}
+                              />
+                              <button type="submit" ref={`icon-select-submit-btn-${category.id}`}>Upload</button>
+                            </form>
+                            <div class={classNames('category-icon', {'fa fa-plus': !category.icon})} onClick={() => $(this.refs[`icon-select-file-${category.id}`]).trigger('click')}>
+                              { category.icon && <img width="56" height="56" style={{display:'block'}} src={`${window.paths.storagePath || '/'}${category.icon}`} alt={category.icon} /> }
+                            </div>
+                          </div>
                           <label>Category title</label>
                           <div class="form-group">
                             <input
@@ -494,7 +810,7 @@ export default class Questionnaire extends React.Component {
                               placeholder="Type Category Name..."
                               class="form-control"
                               defaultValue={category.name}
-                              onKeyUp={(e) => e.which === 13 && this.onCategorySave(category, e.target.value)}
+                              onKeyUp={(e) => e.which === 13 && this.onCategoryNameUpdate(category, e.target.value)}
                             />
                           </div>
                           <label>Enabled</label>
@@ -502,7 +818,7 @@ export default class Questionnaire extends React.Component {
                             <Checkbox
                               checkboxClass="icheckbox_square-blue"
                               increaseArea="20%"
-                              checked={category.enabled}
+                              checked={Boolean(category.enabled)}
                               onChange={(e) => {
                                 Object.assign(category, { enabled: !e.target.checked });
                                 this.setState({ categories: this.state.categories });
@@ -539,7 +855,7 @@ export default class Questionnaire extends React.Component {
                             this.setState({ newCategory: this.state.newCategory });
                           }}
                           onKeyUp={(e) => e.which === 13 && this.onCategoryAdd()}
-                          />
+                        />
                       </div>
                     </div>
                     <label>Enabled</label>
@@ -552,7 +868,7 @@ export default class Questionnaire extends React.Component {
                           Object.assign(this.state.newCategory, { enabled: !e.target.checked });
                           this.setState({ newCategory: this.state.newCategory });
                         }}
-                        />
+                      />
                     </div>
                   </div>
                   <div class="box-footer">
@@ -588,12 +904,53 @@ export default class Questionnaire extends React.Component {
                 }
                 { this.state.category_questions.length === 0 && <p>No questions available.</p> }
               </ol>
+              {/* New category add form */
+                this.state.selectedCategory &&
+                <div class="box box-default box-solid">
+                  <div class="box-header with-border">
+                    <h3 class="box-title">Add new question</h3>
+                  </div>
+                  <div class="box-body">
+                    <label>Question title</label>
+                    <div class="form-group">
+                      <div class="form-group">
+                        <input
+                          type="text"
+                          placeholder="Type Question..."
+                          class="form-control"
+                          value={this.state.newQuestion.name}
+                          onChange={(e) => {
+                            Object.assign(this.state.newQuestion, { name: e.target.value });
+                            this.setState({ newQuestion: this.state.newQuestion });
+                          }}
+                          onKeyUp={(e) => e.which === 13 && this.onCategoryNewQuestionAdd()}
+                        />
+                      </div>
+                    </div>
+                    <label>Question type</label>
+                    <div class="form-group no-margin">
+                      <select class="form-control" onChange={(e) => {
+                        Object.assign(this.state.newQuestion, { type: e.target.value });
+                      }}>
+                        <option value="0">Custom Text</option>
+                        <option value="1">Numeric</option>
+                        <option value="2">Selection</option>
+                        <option value="location">Location</option>
+                        <option value="children">Children</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="box-footer">
+                    <button type="submit" class="btn btn-primary btn-flat" onClick={this.onCategoryNewQuestionAdd.bind(this)}>Add</button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
 
         </div>
         <div class="box-footer">
-          <button type="submit" class="btn btn-primary pull-right">Synchronize changes</button>
+          <button type="submit" class="btn btn-primary pull-right" onClick={this.onPodcastSave.bind(this)}>Synchronize changes</button>
         </div>
       </div>
     );

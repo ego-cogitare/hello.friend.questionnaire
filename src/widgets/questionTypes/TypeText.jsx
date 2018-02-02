@@ -17,17 +17,12 @@ export default class TypeText extends React.Component {
 
   render() {
     return (
-      <div>
-        <div class="box-body">
-        {
-          this.state.questionParams.map((param) => (
-            <ParamWidget key={param.id} param={param} />
-          ))
-        }
-        </div>
-        <div class="box-footer">
-          <button type="submit" class="btn btn-primary btn-flat" onClick={() => this.props.onSave(this.state)}>Save</button>
-        </div>
+      <div class="box-body">
+      {
+        this.state.questionParams.map((param) => (
+          <ParamWidget key={param.id} param={param} />
+        ))
+      }
       </div>
     );
   }
