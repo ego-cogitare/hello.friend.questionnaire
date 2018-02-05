@@ -7,8 +7,17 @@ export default class TypeChildren extends React.Component {
   constructor(props) {
     super(props);
 
-    // Evaluate value params fron strings
-    props.questionParams.map((param) => Object.assign(param, { value: eval(param.value) }));
+    // Evaluate value params from strings
+    props.questionParams.forEach((param) => {
+      // If somehow we receive empty value instead of values serialized ata
+      if (param.name === 'values' && !param.value) {
+        param.value = [];
+        return false;
+      }
+
+      ['item_name'] // Arrays of fields to skip evaluation (string values are allowed)
+        .indexOf(param.name) === -1 && Object.assign(param, { value: eval(param.value) });
+    });
 
     this.state = {
       categoryQuestion: props.categoryQuestion,

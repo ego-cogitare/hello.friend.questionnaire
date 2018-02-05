@@ -7,7 +7,10 @@ export default class TypeText extends React.Component {
     super(props);
 
     // Evaluate value params fron strings
-    props.questionParams.map((param) => Object.assign(param, { value: eval(param.value) }));
+    props.questionParams.forEach((param) => {
+      ['placeholder'] // Arrays of fields to skip evaluation (string values are allowed)
+        .indexOf(param.name) === -1 && Object.assign(param, { value: eval(param.value) });
+    });
 
     this.state = {
       categoryQuestion: props.categoryQuestion,

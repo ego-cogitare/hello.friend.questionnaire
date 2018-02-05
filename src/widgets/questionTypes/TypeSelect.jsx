@@ -6,7 +6,7 @@ export default class TypeSelect extends React.Component {
   constructor(props) {
     super(props);
 
-    // Evaluate value params fron strings
+    // Evaluate value params from strings
     props.questionParams.forEach((param) => {
       // If somehow we receive empty value instead of values serialized ata
       if (param.name === 'values' && !param.value) {

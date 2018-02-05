@@ -87,7 +87,7 @@ export default class Questionnaire extends React.Component {
     $.ajax({
       type: 'GET',
       format: 'json',
-      url: window.paths.podcastsFetch || '/podcasts.json',
+      url: window.questionnaire.podcastsFetch || '/podcasts.json',
       success: (data) => this.setState({ podcasts: data }, () => this.initSortable(this.refs.podcasts)),
       error: (e) => console.error(e)
     });
@@ -149,7 +149,7 @@ export default class Questionnaire extends React.Component {
     }
 
     // Build podcast fetch url
-    let fetchUrl = (window.paths.podcastFetch || '').replace('{id}', podcast.id) || '/podcast.json';
+    let fetchUrl = (window.questionnaire.podcastFetch || '').replace('{id}', podcast.id) || '/podcast.json';
     console.info(`Podcast fetched from url: ${fetchUrl}`);
 
     // Retreive podcast from server
@@ -263,7 +263,7 @@ export default class Questionnaire extends React.Component {
      const podcast = this.getPodcastIdentity({ id: this.state.selectedPodcast });
 
      // Podcast save url
-     const url = window.paths.podcastSync.replace('{id}', this.state.selectedPodcast);
+     const url = window.questionnaire.podcastSync.replace('{id}', this.state.selectedPodcast);
 
      $.ajax({
        url,
@@ -466,17 +466,22 @@ export default class Questionnaire extends React.Component {
     });
   }
 
+  isQuestionCustom(type) {
+    return ['0', '1', '2', 0, 1, 2].indexOf(type) === -1;
+  }
+
   /**
    * On question add
    */
   onCategoryNewQuestionAdd() {
     // Can not add empty podcasts or add to unexisting category
-    if (!this.state.newQuestion.name || !this.state.selectedCategory) {
+    if (!(this.state.newQuestion.name || this.isQuestionCustom(this.state.newQuestion.type)) || !this.state.selectedCategory) {
       return false;
     }
 
     // Add basic question
-    if (['0', '1', '2'].indexOf(this.state.newQuestion.type) !== -1) {
+    if (!this.isQuestionCustom(this.state.newQuestion.type))
+    {
       // Generate question temporary Id
       const questionId = uniqueId();
 
@@ -520,54 +525,65 @@ export default class Questionnaire extends React.Component {
       );
     }
 
-    if (['location', 'children'].indexOf(this.state.newQuestion.type) !== -1) {
-
+    if (['location', 'children'].indexOf(this.state.newQuestion.type) !== -1)
+    {
       // Generate question temporary Id
       const questionId = uniqueId();
+      const { [this.state.newQuestion.type]: customType } = window.questionnaire.customTypes;
+
+      // Check if the question already exists in the category
+      if (this.state.category_questions.find(
+          ({ category_id, question_id }) => category_id === this.state.selectedCategory.id && question_id === customType.id
+      )) {
+        alert('This question already exists in the category.');
+        return false;
+      }
 
       let categoryQuestion = {
         id: questionId - 1,
         isNew: true,
         category_id: this.state.selectedCategory.id,
-        question_id: questionId,
+        question_id: customType.id,
         order: 999,
         question:  Object.assign(
           {},
           { ...this.state.newQuestion },
-          { id: questionId,
+          { id: customType.id,
             type: 3,
-            name: 'Location',
+            name: customType.name,
+            parent_id: null,
             custom_type: this.state.newQuestion.type,
-            questions: []
+            questions: customType.questions.map(({ id, name, type }) => ({
+              id,
+              name,
+              type,
+              parent_id: customType.id,
+              custom_type: null,
+              questions: []
+            }))
           }
         )
       };
-
-      // "id": 15,
-      //         "created_at": "2018-01-25 15:32:22",
-      //         "updated_at": "2018-01-25 15:32:22",
-      //         "name": "Location",
-      //         "type": 3,
-      //         "parent_id": null,
-      //         "custom_type": "location",
-      //         "questions": [
 
       // Add question to category
       this.state.category_questions.push(categoryQuestion);
 
       // Create question default params set
-      let questionParams = questionTypeParamsSet[this.state.newQuestion.type]
-        .map(({ name, value }, key) => {
-          return {
-            id: questionId + key + 1,
-            question_id: questionId,
+      let questionParams = [];
+      customType.questions.forEach(({ id, name, type }) => {
+        questionParams = questionParams.concat(
+          questionTypeParamsSet[type].map(({ name, value }, key) => ({
+            id: questionId + key,
+            question_id: id,
             category_id: this.state.selectedCategory.id,
             name,
             value,
-          };
-        });
+          }))
+        );
+      });
 
-      // console.log('questionParams',questionParams);
+      // console.log('questionParams', questionParams);
+      // return;
 
       // Add question settings
       questionParams.forEach((param) => {
@@ -579,9 +595,6 @@ export default class Questionnaire extends React.Component {
           category_questions: this.state.category_questions,
           newQuestion: { ...this.emptyQuestion } }
       );
-
-      // console.log(categoryQuestion);
-
     }
 
     // {
@@ -658,7 +671,7 @@ export default class Questionnaire extends React.Component {
     e.preventDefault();
 
     post(
-      window.paths.fileUpload || '/file/upload',
+      window.questionnaire.fileUpload || '/file/upload',
       new FormData(e.target),
       {headers:{'content-type':'multipart/form-data'}}
     )
@@ -800,7 +813,7 @@ export default class Questionnaire extends React.Component {
                               <button type="submit" ref={`icon-select-submit-btn-${category.id}`}>Upload</button>
                             </form>
                             <div class={classNames('category-icon', {'fa fa-plus': !category.icon})} onClick={() => $(this.refs[`icon-select-file-${category.id}`]).trigger('click')}>
-                              { category.icon && <img width="56" height="56" style={{display:'block'}} src={`${window.paths.storagePath || '/'}${category.icon}`} alt={category.icon} /> }
+                              { category.icon && <img width="56" height="56" style={{display:'block'}} src={`${window.questionnaire.storagePath || '/'}${category.icon}`} alt={category.icon} /> }
                             </div>
                           </div>
                           <label>Category title</label>
@@ -911,26 +924,32 @@ export default class Questionnaire extends React.Component {
                     <h3 class="box-title">Add new question</h3>
                   </div>
                   <div class="box-body">
-                    <label>Question title</label>
-                    <div class="form-group">
-                      <div class="form-group">
-                        <input
-                          type="text"
-                          placeholder="Type Question..."
-                          class="form-control"
-                          value={this.state.newQuestion.name}
-                          onChange={(e) => {
-                            Object.assign(this.state.newQuestion, { name: e.target.value });
-                            this.setState({ newQuestion: this.state.newQuestion });
-                          }}
-                          onKeyUp={(e) => e.which === 13 && this.onCategoryNewQuestionAdd()}
-                        />
+                    {
+                      !this.isQuestionCustom(this.state.newQuestion.type) &&
+                      <div>
+                        <label>Question title</label>
+                        <div class="form-group">
+                          <div class="form-group">
+                            <input
+                              type="text"
+                              placeholder="Type Question..."
+                              class="form-control"
+                              value={this.state.newQuestion.name}
+                              onChange={(e) => {
+                                Object.assign(this.state.newQuestion, { name: e.target.value });
+                                this.setState({ newQuestion: this.state.newQuestion });
+                              }}
+                              onKeyUp={(e) => e.which === 13 && this.onCategoryNewQuestionAdd()}
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    }
                     <label>Question type</label>
                     <div class="form-group no-margin">
                       <select class="form-control" onChange={(e) => {
                         Object.assign(this.state.newQuestion, { type: e.target.value });
+                        this.setState({ newQuestion: this.state.newQuestion });
                       }}>
                         <option value="0">Custom Text</option>
                         <option value="1">Numeric</option>
