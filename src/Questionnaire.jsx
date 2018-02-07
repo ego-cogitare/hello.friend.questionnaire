@@ -56,6 +56,9 @@ export default class Questionnaire extends React.Component {
 
       categories: [],
 
+      // Existing questions library
+      questions: [],
+
       // Questions of the selected category
       category_questions: [],
 
@@ -498,6 +501,90 @@ export default class Questionnaire extends React.Component {
 
   isQuestionCustom(type) {
     return ['0', '1', '2', 0, 1, 2].indexOf(type) === -1;
+  }
+
+  onCategoryExistQuestionAdd() {
+    const $modal = $(this.refs['questions-modal']);
+
+    $modal.show(0, function() {
+      $(this).addClass('in');
+    });
+  }
+
+  closeQuestionsModal() {
+    const $modal = $(this.refs['questions-modal']);
+
+    $modal.removeClass('in');
+    setTimeout(() => $modal.css({ display: 'none' }), 500);
+  }
+
+  onQuestionSelect(question, e) {
+    e.preventDefault();
+    this.state.questions.forEach(
+      (question) => Object.assign(question, { isSelected: false })
+    );
+    Object.assign(question, { isSelected: true });
+    this.setState({ questions: this.state.questions });
+  }
+
+  onQuestionAdd() {
+    const question = this.state.questions.find(({isSelected}) => isSelected);
+
+    if (!question) {
+      return false;
+    }
+
+    // Check if the question already exists in the category
+    const questionExists = this.state.category_questions.find(({ category_id, question_id }) => {
+      return category_id === this.state.selectedCategory.id && question_id === question.id;
+    });
+
+    if (questionExists) {
+      alert(`Question already exists in the category.`);
+      return false;
+    }
+
+    // Reset question selection in the modal popup
+    this.state.questions.forEach(
+      (question) => Object.assign(question, { isSelected: false })
+    );
+    this.setState({ questions: this.state.questions });
+
+    // Add question to category
+    let categoryQuestion = {
+      id: question.id,
+      isNew: false,
+      category_id: this.state.selectedCategory.id,
+      question_id: question.id,
+      order: 999,
+      question: { ...question }
+    };
+
+    // Add question to category
+    this.state.category_questions.push(categoryQuestion);
+
+    // Create question default params set
+    let questionParams = questionTypeParamsSet[question.type]
+      .map(({ name, value }, key) => {
+        return {
+          id: question.id + key + 1,
+          question_id: question.id,
+          category_id: this.state.selectedCategory.id,
+          name,
+          value,
+        };
+      });
+
+    // Add question settings
+    questionParams.forEach((param) => {
+      this.state.question_params.push(param);
+    });
+
+    this.setState(
+      { question_params: this.state.question_params,
+        category_questions: this.state.category_questions },
+      () => this.closeQuestionsModal()
+    );
   }
 
   /**
@@ -990,7 +1077,8 @@ export default class Questionnaire extends React.Component {
                     </div>
                   </div>
                   <div class="box-footer">
-                    <button type="submit" class="btn btn-primary btn-flat" onClick={this.onCategoryNewQuestionAdd.bind(this)}>Add</button>
+                    <button type="submit" class="btn btn-primary btn-flat" onClick={this.onCategoryNewQuestionAdd.bind(this)}>Add New</button>
+                    <button type="submit" class="btn btn-info btn-flat pull-right" onClick={this.onCategoryExistQuestionAdd.bind(this)}>Add Existing</button>
                   </div>
                 </div>
               }
@@ -1004,6 +1092,30 @@ export default class Questionnaire extends React.Component {
             class={classNames('btn btn-primary pull-right', { 'disabled': this.state.dataSaving })}
             onClick={this.onPodcastSave.bind(this)}
           >{this.state.dataSaving ? 'Saving...' : 'Save changes'}</button>
+        </div>
+
+        <div class="modal fade" ref="questions-modal" style={{ display:'none' }}>
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" onClick={this.closeQuestionsModal.bind(this)}>
+                  <span aria-hidden="true">×</span>
+                </button>
+                <h4 class="modal-title">Select question to add</h4>
+              </div>
+              <div class="modal-body questions-library">
+                {
+                  this.state.questions.map((question) => (
+                    <p class={classNames('question', { 'selected': question.isSelected })} key={question.id} onClick={this.onQuestionSelect.bind(this, question)}>{question.name}</p>
+                  ))
+                }
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal" onClick={this.closeQuestionsModal.bind(this)}>Close</button>
+                <button type="button" class="btn btn-primary" onClick={this.onQuestionAdd.bind(this)}>Add question</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

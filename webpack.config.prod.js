@@ -10,7 +10,7 @@ module.exports = {
   output: {
     path: "./public",
     publicPath: "./",
-    filename: 'app.[hash].min.js'
+    filename: 'questionnaire.min.js'
   },
   module: {
     loaders: [
@@ -43,9 +43,9 @@ module.exports = {
   },
   plugins: [
     new webpack.ProvidePlugin({ config: 'config' }),
-    new WebpackCleanupPlugin({
-      exclude: ['vendors/**/*', 'icons/**/*'],
-    }),
+    // new WebpackCleanupPlugin({
+    //   exclude: ['vendors/**/*', 'icons/**/*'],
+    // }),
     new HtmlWebpackPlugin({
       inject: false,
       template: 'src/staticFiles/index.ejs',
@@ -57,7 +57,7 @@ module.exports = {
         removeStyleLinkTypeAttributes: true
       }
     }),
-    new ExtractTextPlugin("app.[hash].min.css"),
+    new ExtractTextPlugin("questionnaire.min.css"),
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false })

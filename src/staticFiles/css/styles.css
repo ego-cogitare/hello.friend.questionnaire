@@ -54,3 +54,10 @@
 .category-icon:hover {
   color: #777;
 }
+.questions-library .question:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+.questions-library .question.selected {
+  font-weight: bold;
+}
