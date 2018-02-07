@@ -15,7 +15,7 @@ export default class TypeChildren extends React.Component {
         return false;
       }
 
-      ['item_name'] // Arrays of fields to skip evaluation (string values are allowed)
+      ['item_name', 'placeholder'] // Arrays of fields to skip evaluation (string values are allowed)
         .indexOf(param.name) === -1 && Object.assign(param, { value: eval(param.value) });
     });
 

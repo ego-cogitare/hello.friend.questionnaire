@@ -54,7 +54,7 @@ export default class ParamWidget extends React.Component {
     e.preventDefault();
 
     post(
-      window.paths.fileUpload || '/file/upload',
+      window.questionnaire.fileUpload || '/file/upload',
       new FormData(e.target),
       {headers:{'content-type':'multipart/form-data'}}
     )
@@ -101,7 +101,7 @@ export default class ParamWidget extends React.Component {
                           <button type="submit" ref={`icon-select-submit-btn-${item.id}`}>Upload</button>
                         </form>
                         { item.icon ?
-                            <img width="34" height="34" src={`${window.paths.storagePath || '/'}${item.icon}`} alt={item.icon} style={{marginTop:5}} /> :
+                            <img width="34" height="34" src={`${window.questionnaire.storagePath || '/'}${item.icon}`} alt={item.icon} style={{marginTop:5}} /> :
                             <i class="fa fa-plus select-list-icon-add"></i> }
                       </div>
                     }

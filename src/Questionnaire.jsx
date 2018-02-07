@@ -79,10 +79,13 @@ export default class Questionnaire extends React.Component {
 
       // New question temporary store
       newQuestion: { ...this.emptyQuestion },
+
+      // Podcast saving in progress
+      dataSaving: false,
     };
   }
 
-  componentDidMount() {
+  fetchPodcastsList() {
     // Fetch list of podcasts
     $.ajax({
       type: 'GET',
@@ -91,6 +94,10 @@ export default class Questionnaire extends React.Component {
       success: (data) => this.setState({ podcasts: data }, () => this.initSortable(this.refs.podcasts)),
       error: (e) => console.error(e)
     });
+  }
+
+  componentDidMount() {
+    this.fetchPodcastsList();
   }
 
   initSortable(ref) {
@@ -256,6 +263,14 @@ export default class Questionnaire extends React.Component {
    onPodcastSave(e) {
      e.preventDefault();
 
+     if (this.state.dataSaving) {
+       console.log(`Podcast already in saving progress`);
+       return false;
+     }
+
+     //
+     this.setState({ dataSaving: true });
+
      // If not podcast is selected
      if (!this.state.selectedPodcast) return false;
 
@@ -269,7 +284,22 @@ export default class Questionnaire extends React.Component {
        url,
        data: { podcast: JSON.stringify(podcast) },
        type: 'post',
-       success: (r) => console.log(`Podcast data saved.`, r),
+       success: (r) => {
+         this.setState({
+           dataSaving: false,
+           selectedPodcast: null,
+           selectedCategory: null,
+           selectedQuestion: null,
+           categories: [],
+           category_questions: [],
+           question_params: []
+         },
+         () => {
+           this.podcastIdentities = [];
+           this.fetchPodcastsList();
+         }
+        );
+       },
        error: (e) => console.error(e)
      });
    }
@@ -969,7 +999,11 @@ export default class Questionnaire extends React.Component {
 
         </div>
         <div class="box-footer">
-          <button type="submit" class="btn btn-primary pull-right" onClick={this.onPodcastSave.bind(this)}>Synchronize changes</button>
+          <button
+            type="submit"
+            class={classNames('btn btn-primary pull-right', { 'disabled': this.state.dataSaving })}
+            onClick={this.onPodcastSave.bind(this)}
+          >{this.state.dataSaving ? 'Saving...' : 'Save changes'}</button>
         </div>
       </div>
     );
