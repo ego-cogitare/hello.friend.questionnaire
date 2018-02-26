@@ -30,7 +30,7 @@ export default class Questionnaire extends React.Component {
     this.emptyCategory = {
       name: '',
       icon: '',
-      type: 1,
+      type: window.questionnaire.categoryType,
       podcast_id: null,
       category_questions: [],
       question_params: [],
@@ -101,31 +101,40 @@ export default class Questionnaire extends React.Component {
 
   componentDidMount() {
     this.fetchPodcastsList();
+
+    // Fetch questions list
+    $.ajax({
+      type: 'GET',
+      format: 'json',
+      url: window.questionnaire.questionsFetch || '/questions.json',
+      success: (questions) => this.setState({ questions }),
+      error: (e) => console.error(e)
+    });
   }
 
   initSortable(ref) {
-    $(ref).nestedSortable({
-      forcePlaceholderSize: true,
-      handle: 'div',
-      helper:	'clone',
-      items: 'li',
-      opacity: .6,
-      placeholder: 'placeholder',
-      revert: 250,
-      tolerance: 'pointer',
-      toleranceElement: '> div',
-      maxLevels: 1,
-      isTree: true,
-      expandOnHover: 700,
-      startCollapsed: false,
-      stop: (e) => {
-        $(e.target).find('li').each((order, item) => {
-          const itemId = $(item).data('id');
-          const sortableName = $(item).data('sortable-name');
-          Object.assign(this.state[sortableName].find(({id}) => id === itemId), { order });
-        });
-      }
-    });
+    // $(ref).nestedSortable({
+    //   forcePlaceholderSize: true,
+    //   handle: 'div',
+    //   helper:	'clone',
+    //   items: 'li',
+    //   opacity: .6,
+    //   placeholder: 'placeholder',
+    //   revert: 250,
+    //   tolerance: 'pointer',
+    //   toleranceElement: '> div',
+    //   maxLevels: 1,
+    //   isTree: true,
+    //   expandOnHover: 700,
+    //   startCollapsed: false,
+    //   stop: (e) => {
+    //     $(e.target).find('li').each((order, item) => {
+    //       const itemId = $(item).data('id');
+    //       const sortableName = $(item).data('sortable-name');
+    //       Object.assign(this.state[sortableName].find(({id}) => id === itemId), { order });
+    //     });
+    //   }
+    // });
   }
 
   /*
@@ -207,6 +216,8 @@ export default class Questionnaire extends React.Component {
    * Podcast name update
    */
   onPodcastNameUpdate(podcast, name) {
+    const identity = this.getPodcastIdentity(podcast);
+    Object.assign(identity, { name });
     Object.assign(podcast, { name });
     this.setState({ podcasts: this.state.podcasts });
   }
@@ -248,7 +259,17 @@ export default class Questionnaire extends React.Component {
     }
     // Podcast removing availability should be checked before podcast deletion
     else {
-      alert('Podcast removing availability should be checked before podcast deletion.');
+      $.ajax({
+        url: window.questionnaire.podcastSync.replace('{id}', podcast.id),
+        type: 'delete',
+        success: (r) => {
+          this.doRemovePodcast(podcast);
+        },
+        error: (e) => {
+          console.error(e);
+          alert('Podcast can not be deleted.');
+        }
+      });
     }
   }
 
@@ -256,6 +277,10 @@ export default class Questionnaire extends React.Component {
    * Do podcast remove action
    */
   doRemovePodcast(podcast) {
+    console.log('Podcast to remove:', podcast);
+    // If current selected podcast deleted
+    (this.state.selectedPodcast === podcast.id) && this.setState({ categories: [], questions: [] });
+
     const podcasts = this.state.podcasts.filter(({id}) => id !== podcast.id);
     this.setState({ podcasts });
   }
@@ -271,9 +296,6 @@ export default class Questionnaire extends React.Component {
        return false;
      }
 
-     //
-     this.setState({ dataSaving: true });
-
      // If not podcast is selected
      if (!this.state.selectedPodcast) return false;
 
@@ -283,10 +305,15 @@ export default class Questionnaire extends React.Component {
      // Podcast save url
      const url = window.questionnaire.podcastSync.replace('{id}', this.state.selectedPodcast);
 
+     // If no podcast found in identities or podcast sync url not defined
+     if (!podcast || !url) return false;
+
+     this.setState({ dataSaving: true });
+
      $.ajax({
        url,
        data: { podcast: JSON.stringify(podcast) },
-       type: 'post',
+       type: 'put',
        success: (r) => {
          this.setState({
            dataSaving: false,
@@ -387,7 +414,17 @@ export default class Questionnaire extends React.Component {
     }
     // Category removing availability should be checked before category deletion
     else {
-      alert('Category removing availability should be checked before category deletion.');
+      $.ajax({
+        url: window.questionnaire.categorySync.replace('{id}', category.id),
+        type: 'delete',
+        success: (r) => {
+          this.doRemoveCategory(category);
+        },
+        error: (e) => {
+          console.error(e);
+          alert('Category can not be deleted.');
+        }
+      });
     }
   }
 
@@ -395,6 +432,11 @@ export default class Questionnaire extends React.Component {
    * Do category remove action
    */
   doRemoveCategory(category) {
+    console.log('Category to remove:', category);
+
+    // If current selected category deleted
+    (this.state.selectedCategory.id === category.id) && this.setState({ category_questions: [] });
+
     const categories = this.state.categories.filter(({id}) => id !== category.id);
     this.setState({ categories });
   }
@@ -638,7 +680,10 @@ export default class Questionnaire extends React.Component {
       this.setState(
         { question_params: this.state.question_params,
           category_questions: this.state.category_questions,
-          newQuestion: { ...this.emptyQuestion } }
+          newQuestion: Object.assign(
+            { ...this.emptyQuestion },
+            { type: Number(this.state.newQuestion.type) }
+          ) }
       );
     }
 
@@ -699,9 +744,6 @@ export default class Questionnaire extends React.Component {
         );
       });
 
-      // console.log('questionParams', questionParams);
-      // return;
-
       // Add question settings
       questionParams.forEach((param) => {
         this.state.question_params.push(param);
@@ -710,78 +752,12 @@ export default class Questionnaire extends React.Component {
       this.setState(
         { question_params: this.state.question_params,
           category_questions: this.state.category_questions,
-          newQuestion: { ...this.emptyQuestion } }
+          newQuestion: Object.assign(
+            { ...this.emptyQuestion },
+            { type: Number(this.state.newQuestion.type) }
+          ) }
       );
     }
-
-    // {
-    //     "id": 71,
-    //     "created_at": "2018-01-25 15:32:40",
-    //     "updated_at": "2018-01-25 15:32:40",
-    //     "category_id": 8,
-    //     "question_id": 1,
-    //     "order": 71,
-    //     "question": {
-    //         "id": 1,
-    //         "created_at": "2018-01-25 15:32:22",
-    //         "updated_at": "2018-01-25 15:32:22",
-    //         "name": "Pick your Top 3 Personality",
-    //         "type": 2,
-    //         "parent_id": null,
-    //         "custom_type": null,
-    //         "questions": []
-    //     }
-    // },
-    //
-    // {
-    //     "id": 79,
-    //     "created_at": "2018-01-25 15:32:45",
-    //     "updated_at": "2018-01-25 15:32:45",
-    //     "category_id": 8,
-    //     "question_id": 15,
-    //     "order": 79,
-    //     "question": {
-    //         "id": 15,
-    //         "created_at": "2018-01-25 15:32:22",
-    //         "updated_at": "2018-01-25 15:32:22",
-    //         "name": "Location",
-    //         "type": 3,
-    //         "parent_id": null,
-    //         "custom_type": "location",
-    //         "questions": [
-    //             {
-    //                 "id": 9,
-    //                 "created_at": "2018-01-25 15:32:22",
-    //                 "updated_at": "2018-01-25 15:32:22",
-    //                 "name": "City",
-    //                 "type": 0,
-    //                 "parent_id": 15,
-    //                 "custom_type": null,
-    //                 "questions": []
-    //             },
-    //             {
-    //                 "id": 10,
-    //                 "created_at": "2018-01-25 15:32:22",
-    //                 "updated_at": "2018-01-25 15:32:22",
-    //                 "name": "State",
-    //                 "type": 0,
-    //                 "parent_id": 15,
-    //                 "custom_type": null,
-    //                 "questions": []
-    //             },
-    //             {
-    //                 "id": 11,
-    //                 "created_at": "2018-01-25 15:32:22",
-    //                 "updated_at": "2018-01-25 15:32:22",
-    //                 "name": "Zip Code",
-    //                 "type": 0,
-    //                 "parent_id": 15,
-    //                 "custom_type": null,
-    //                 "questions": []
-    //             }
-    //         ]
-    //     }
-    // },
   }
 
   onSelectCategoryIconFormSubmit(category, e) {
@@ -1009,7 +985,7 @@ export default class Questionnaire extends React.Component {
             </div>
 
             <div class="col-md-4">
-              <h4 class="box-title">Question Parametres</h4>
+              <h4 class="box-title">Category Questions</h4>
               <ol ref="category_questions" class="sortable">
                 {
                   this.state.category_questions.map((category_question) => (
@@ -1064,7 +1040,7 @@ export default class Questionnaire extends React.Component {
                     }
                     <label>Question type</label>
                     <div class="form-group no-margin">
-                      <select class="form-control" onChange={(e) => {
+                      <select class="form-control" ref="questionType" onChange={(e) => {
                         Object.assign(this.state.newQuestion, { type: e.target.value });
                         this.setState({ newQuestion: this.state.newQuestion });
                       }}>
@@ -1095,11 +1071,11 @@ export default class Questionnaire extends React.Component {
         </div>
 
         <div class="modal fade" ref="questions-modal" style={{ display:'none' }}>
-          <div class="modal-dialog">
+          <div class="modal-dialog" style={{ width:1000 }}>
             <div class="modal-content">
               <div class="modal-header">
                 <button type="button" class="close" onClick={this.closeQuestionsModal.bind(this)}>
-                  <span aria-hidden="true">×</span>
+                  <span>×</span>
                 </button>
                 <h4 class="modal-title">Select question to add</h4>
               </div>

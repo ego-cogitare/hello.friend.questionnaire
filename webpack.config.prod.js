@@ -8,9 +8,9 @@ module.exports = {
   entry: './src/app.jsx',
   devtool: null,
   output: {
-    path: "./public",
-    publicPath: "./",
-    filename: 'questionnaire.min.js'
+    path: "../",
+    publicPath: "../",
+    filename: 'js/questionnaire.min.js'
   },
   module: {
     loaders: [
@@ -46,18 +46,18 @@ module.exports = {
     // new WebpackCleanupPlugin({
     //   exclude: ['vendors/**/*', 'icons/**/*'],
     // }),
-    new HtmlWebpackPlugin({
-      inject: false,
-      template: 'src/staticFiles/index.ejs',
-      minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeRedundantAttributes: true,
-        removeScriptTypeAttributes: true,
-        removeStyleLinkTypeAttributes: true
-      }
-    }),
-    new ExtractTextPlugin("questionnaire.min.css"),
+//    new HtmlWebpackPlugin({
+//      inject: false,
+//      template: 'src/staticFiles/index.ejs',
+//      minify: {
+//        removeComments: true,
+//        collapseWhitespace: true,
+//        removeRedundantAttributes: true,
+//        removeScriptTypeAttributes: true,
+//        removeStyleLinkTypeAttributes: true
+//      }
+//    }),
+    new ExtractTextPlugin("css/questionnaire.min.css"),
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false })

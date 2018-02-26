@@ -155,12 +155,14 @@
       <script type="text/javascript" src="http://192.168.1.219:8000/js/main.js" defer></script>
       <script>
         window.questionnaire = {
+          categoryType: 1,
           storagePath: 'http://192.168.1.219:8000/storage/',
-          fileUpload: 'http://192.168.1.219:8000/file/upload',
-          podcastSync: 'http://192.168.1.219:8000/podcast/set/{id}',
-          podcastFetch: 'http://192.168.1.219:8000/podcast/get/{id}',
-          podcastsFetch: 'http://192.168.1.219:8000/podcast/list',
-          questionsFetch: 'http://192.168.1.219:8000/question/list'
+          fileUpload: 'http://192.168.1.219:8000/admin/file/upload',
+          podcastSync: 'http://192.168.1.219:8000/admin/podcast/{id}',
+          podcastFetch: 'http://192.168.1.219:8000/admin/podcast/{id}?type=1',
+          podcastsFetch: 'http://192.168.1.219:8000/admin/podcast',
+          categorySync: 'http://192.168.1.219:8000/admin/category/{id}',
+          questionsFetch: 'http://192.168.1.219:8000/admin/question',
           customTypes: {
             children: {
               id: 16,

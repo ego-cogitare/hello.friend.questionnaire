@@ -54,6 +54,10 @@
 .category-icon:hover {
   color: #777;
 }
+.questions-library {
+  max-height: 80vh;
+  overflow: auto;
+}
 .questions-library .question:hover {
   cursor: pointer;
   text-decoration: underline;
